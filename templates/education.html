@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Education Hub | ShieldMatrix AI</title>
+    <!-- Include Marked.js for Markdown Parsing -->
+    <script src="[https://cdn.jsdelivr.net/npm/marked/marked.min.js](https://cdn.jsdelivr.net/npm/marked/marked.min.js)"></script>
+    <style>
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            padding: 50px; 
+            background-color: #e9ecef; 
+            color: #333;
+        }
+        .card { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+            max-width: 900px; 
+            margin: 0 auto; 
+        }
+        h1 { color: #0070f3; text-align: center; }
+        h2 { color: #ff9800; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 40px;}
+        h3 { color: #d32f2f; margin-bottom: 5px; }
+        p { font-size: 1.1rem; line-height: 1.6; }
+        ul { font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px; }
+        
+        .threat-box {
+            background: #f8f9fa;
+            border-left: 5px solid #d32f2f;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+        .prevention-box {
+            background: #e8f5e9;
+            border-left: 5px solid #4caf50;
+            padding: 20px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .back-link { 
+            display: block; 
+            text-align: center;
+            margin-top: 40px; 
+            color: #0070f3; 
+            text-decoration: none; 
+            font-weight: 500; 
+        }
+        .back-link:hover { text-decoration: underline; }
+
+        /* AI Chatbot Section Styles */
+        .chat-section {
+            margin-top: 40px;
+            border-top: 2px solid #eee;
+            padding-top: 30px;
+        }
+        .chat-container {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        .chat-log {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-right: 5px;
+        }
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            max-width: 85%;
+            line-height: 1.5;
+            font-size: 0.98rem;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: #0070f3;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .bot-message {
+            background-color: #ffffff;
+            color: #212529;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            border: 1px solid #dee2e6;
+            border-left: 4px solid #0070f3;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        /* Markdown Output Styling within Bot Messages */
+        .bot-message p { margin-top: 0; margin-bottom: 10px; font-size: 0.98rem; }
+        .bot-message p:last-child { margin-bottom: 0; }
+        .bot-message ul, .bot-message ol { margin-top: 0; padding-left: 20px; font-size: 0.98rem; }
+        .bot-message table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 15px; 
+            font-size: 0.9rem;
+        }
+        .bot-message th, .bot-message td { 
+            border: 1px solid #ccc; 
+            padding: 8px; 
+            text-align: left; 
+        }
+        .bot-message th { background-color: #f1f3f5; }
+        .bot-message code { 
+            background-color: #f1f3f5; 
+            padding: 2px 4px; 
+            border-radius: 4px; 
+            font-family: monospace; 
+            color: #d32f2f;
+        }
+        .bot-message blockquote {
+            border-left: 4px solid #adb5bd;
+            margin: 10px 0;
+            padding-left: 15px;
+            color: #495057;
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            font-style: italic;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        .chat-input:focus {
+            outline: none;
+            border-color: #0070f3;
+        }
+        .chat-send-btn {
+            padding: 12px 24px;
+            background-color: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .chat-send-btn:hover:not(:disabled) { background-color: #005bb5; }
+        .chat-send-btn:disabled { background-color: #999; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Cybersecurity Education Hub</h1>
+        <p style="text-align: center;">Welcome to the threat library. Use this guide alongside the ShieldMatrix Dashboard to understand the malicious data you encounter and learn how to stop cyber attacks before they happen.</p>
+        
+        <h2>1. Phishing & Suspicious Links</h2>
+        <div class="threat-box">
+            <h3>The Threat</h3>
+            <p>Phishing is a type of social engineering where attackers deceive you into revealing sensitive information or installing malware by disguising themselves as a trustworthy entity. Malicious links often hide behind fake "Free Giftcard" offers or urgent "Account Compromised" alerts.</p>
+        </div>
+        <div class="prevention-box">
+            <h3 style="color: #2e7d32;">How to Prevent It</h3>
+            <ul>
+                <li><strong>Hover before you click:</strong> Always hover your mouse over a link to inspect the actual URL before clicking.</li>
+                <li><strong>Verify the source:</strong> If an email or message claims urgency, navigate to the official website manually rather than clicking the provided link.</li>
+                <li><strong>Look for typos:</strong> Phishing sites often use misspelled domains (e.g., <em>goog1e.com</em> instead of <em>google.com</em>).</li>
+            </ul>
+        </div>
+
+        <h2>2. Malicious Downloads (Malware & Ransomware)</h2>
+        <div class="threat-box">
+            <h3>The Threat</h3>
+            <p>Downloading unverified files (like random `.vbs`, `.exe`, or macro-enabled `.doc` files) can execute malicious code on your computer. This malicious data can spy on your keystrokes, steal passwords, or lock your files until a ransom is paid.</p>
+        </div>
+        <div class="prevention-box">
+            <h3 style="color: #2e7d32;">How to Prevent It</h3>
+            <ul>
+                <li><strong>Only trust official sources:</strong> Never download software from third-party distribution sites. Go directly to the developer's official page.</li>
+                <li><strong>Check file extensions:</strong> Be highly suspicious of unexpected script files (like `.vbs` or `.bat`) masquerading as invoices or documents.</li>
+                <li><strong>Keep defenses active:</strong> Ensure your OS and antivirus definitions are up to date to catch known malicious signatures.</li>
+            </ul>
+        </div>
+
+        <h2>3. Unsecured Connections & Data Interception</h2>
+        <div class="threat-box">
+            <h3>The Threat</h3>
+            <p>Submitting sensitive data (like usernames and passwords) over an unencrypted HTTP connection means your data is transmitted in plain text. Any attacker monitoring the network (like on public Wi-Fi) can easily intercept and steal this information.</p>
+        </div>
+        <div class="prevention-box">
+            <h3 style="color: #2e7d32;">How to Prevent It</h3>
+            <ul>
+                <li><strong>Look for HTTPS:</strong> Ensure the website URL begins with <code>https://</code> and has a padlock icon in the browser address bar before entering any credentials.</li>
+                <li><strong>Avoid public Wi-Fi for sensitive tasks:</strong> Do not check bank accounts or log into critical services on unsecured public networks without a trusted VPN.</li>
+                <li><strong>Use a Password Manager:</strong> This prevents you from accidentally typing credentials into HTTP or cloned sites, as the manager won't recognize the fake domain.</li>
+            </ul>
+        </div>
+
+        <!-- Interactive AI Education Chatbot -->
+        <div class="chat-section">
+            <h2>Ask ShieldMatrix EduBot</h2>
+            <p>Have a question about a specific cybersecurity threat, term, or best practice? Ask our AI tutor below!</p>
+            
+            <div class="chat-container">
+                <div class="chat-log" id="chatLog">
+                    <div class="message bot-message">
+                        Hello! I am <strong>ShieldMatrix EduBot</strong>, powered by <code>openai/gpt-oss-120b</code>. How can I help you understand cybersecurity concepts or online threat prevention today?
+                    </div>
+                </div>
+                
+                <div class="chat-input-wrapper">
+                    <input type="text" id="userInput" class="chat-input" placeholder="e.g., What is multi-factor authentication and why is it important?" autocomplete="off">
+                    <button id="sendBtn" class="chat-send-btn">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Call to Action for Quizzes -->
+        <div style="text-align: center; margin-top: 40px; border-top: 2px solid #eee; padding-top: 30px;">
+            <p>Done reading? Put your knowledge to the test.</p>
+            <a href="/quiz" class="chat-send-btn" style="background-color: #8e44ad; text-decoration: none; display: inline-block;">Generate Dynamic Flashcards & Quizzes</a>
+        </div>
+
+        <a href="/" class="back-link">&larr; Return to Landing Page</a>
+        <a href="/dashboard" class="back-link" style="margin-top: 15px;">Launch the ShieldMatrix Dashboard &rarr;</a>
+    </div>
+
+    <script>
+        const chatLog = document.getElementById('chatLog');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // Configure Marked.js settings (optional)
+        marked.setOptions({
+            breaks: true, // Convert \n to <br>
+            gfm: true     // GitHub Flavored Markdown (enables tables)
+        });
+
+        function appendMessage(content, sender, isMarkdown = false) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender === 'user' ? 'user-message' : 'bot-message'}`;
+            
+            if (isMarkdown && sender === 'bot') {
+                msgDiv.innerHTML = marked.parse(content);
+            } else {
+                msgDiv.innerHTML = content;
+            }
+            
+            chatLog.appendChild(msgDiv);
+            chatLog.scrollTop = chatLog.scrollHeight;
+            return msgDiv;
+        }
+
+        async function handleSend() {
+            const query = userInput.value.trim();
+            if (!query) return;
+
+            // Display user message
+            appendMessage(query, 'user');
+            userInput.value = '';
+            
+            // Disable inputs while processing
+            userInput.disabled = true;
+            sendBtn.disabled = true;
+
+            // Display placeholder loading message
+            const loadingMsg = appendMessage('<em>ShieldMatrix EduBot is thinking...</em>', 'bot');
+
+            try {
+                const response = await fetch('/api/ask-education', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: query })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    // Use Marked.js to parse the Markdown response
+                    loadingMsg.innerHTML = marked.parse(data.answer);
+                } else {
+                    loadingMsg.innerHTML = `<span style="color: #d32f2f;"><strong>Error:</strong> ${data.message}</span>`;
+                }
+            } catch (err) {
+                loadingMsg.innerHTML = `<span style="color: #d32f2f;"><strong>Error:</strong> Failed to connect to EduBot backend.</span>`;
+            } finally {
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                userInput.focus();
+                chatLog.scrollTop = chatLog.scrollHeight;
+            }
+        }
+
+        sendBtn.addEventListener('click', handleSend);
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                handleSend();
+            }
+        });
+    </script>
+</body>
+</html>

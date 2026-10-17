@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Intelligence Dashboard | ShieldMatrix AI</title>
+    <!-- Include Marked.js for Markdown Formatting of AI Reports -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            text-align: center; 
+            padding: 40px 20px; 
+            background-color: #e9ecef; 
+            color: #333;
+        }
+        .card { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+            max-width: 950px; 
+            margin: 0 auto; 
+        }
+        h1 { color: #0070f3; margin-bottom: 8px; font-size: 1.9rem; }
+        .subtitle { color: #555; font-size: 1.05rem; line-height: 1.5; margin-bottom: 25px; }
+        
+        .btn {
+            padding: 12px 24px;
+            background-color: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background 0.2s, opacity 0.2s;
+        }
+        .btn:hover:not(:disabled) { background-color: #005bb5; }
+        .btn:disabled { background-color: #999; cursor: not-allowed; opacity: 0.7; }
+        
+        /* ── Deep File & Safety Scanner ───────────────────────────── */
+        .scanner-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 24px;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+        .scanner-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 18px;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .scanner-tab-btn {
+            padding: 9px 18px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            background: #fff;
+            color: #495057;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .scanner-tab-btn:hover { background: #e9ecef; }
+        .scanner-tab-btn.active {
+            background: #0070f3;
+            color: #fff;
+            border-color: #0070f3;
+        }
+        .dropzone {
+            border: 2px dashed #0070f3;
+            border-radius: 8px;
+            background: #f0f7ff;
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .dropzone.dragover {
+            background: #e1effe;
+            border-color: #005bb5;
+            transform: scale(1.01);
+        }
+        .dropzone-icon {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .file-selected-box {
+            display: none;
+            margin-top: 14px;
+            padding: 14px 18px;
+            background: #fff;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 10px;
+            margin: 16px 0;
+            background: #fff;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            font-size: 0.82rem;
+        }
+        .telemetry-item {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .telemetry-label {
+            font-size: 0.72rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        .telemetry-val {
+            font-weight: 600;
+            color: #212529;
+            word-break: break-all;
+        }
+        .verdict-banner {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.05rem;
+        }
+        .verdict-safe { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .verdict-threat { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .verdict-suspicious { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        
+        .analysis-markdown {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            color: #212529;
+        }
+        .analysis-markdown h3 {
+            color: #0070f3;
+            margin-top: 16px;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 4px;
+        }
+        .analysis-markdown h3:first-child { margin-top: 0; }
+        .analysis-markdown ul { padding-left: 20px; margin: 8px 0; }
+        .analysis-markdown code {
+            background: #f1f3f5;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d32f2f;
+        }
+
+        /* ── Embedded Live Log Panel ─────────────────────────────── */
+        .log-panel {
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #0d1117;
+            text-align: left;
+        }
+        .log-panel-header {
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .log-panel-header h2 {
+            color: #58a6ff;
+            font-size: 1.05rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .lp-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #3fb950;
+            display: inline-block;
+            animation: lp-pulse 1.5s infinite;
+        }
+        .lp-dot.paused { background: #d29922; animation: none; }
+        @keyframes lp-pulse { 0%,100%{opacity:1}50%{opacity:.3} }
+        .lp-controls { display: flex; gap: 8px; }
+        .lp-btn {
+            padding: 6px 14px;
+            border: 1px solid #30363d;
+            border-radius: 5px;
+            background: #21262d;
+            color: #c9d1d9;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-family: 'Courier New', monospace;
+        }
+        .lp-btn:hover { background: #30363d; }
+        .lp-btn.active { background: #1f6feb; border-color: #1f6feb; color: #fff; }
+
+        .lp-stats {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 10px 20px;
+            border-bottom: 1px solid #21262d;
+            background: #0d1117;
+        }
+        .lp-pill {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: bold;
+            border: 1px solid;
+            font-family: 'Courier New', monospace;
+        }
+        .lp-pill-total  { border-color: #58a6ff; color: #58a6ff; }
+        .lp-pill-safe   { border-color: #3fb950; color: #3fb950; }
+        .lp-pill-threat { border-color: #f85149; color: #f85149; }
+        .lp-pill-uploads{ border-color: #e83e8c; color: #e83e8c; }
+        .lp-pill-ext    { border-color: #d29922; color: #d29922; }
+
+        .lp-filters {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            padding: 8px 20px;
+            border-bottom: 1px solid #21262d;
+            background: #0d1117;
+        }
+        .lp-tab {
+            padding: 4px 11px;
+            border-radius: 5px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #8b949e;
+            font-size: 0.72rem;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            transition: all 0.15s;
+        }
+        .lp-tab:hover, .lp-tab.active { border-color: #58a6ff; color: #58a6ff; }
+
+        .lp-table-wrap {
+            max-height: 380px;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+        .lp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+        }
+        .lp-table thead {
+            position: sticky;
+            top: 0;
+            background: #161b22;
+            z-index: 1;
+        }
+        .lp-table th {
+            padding: 9px 12px;
+            text-align: left;
+            color: #8b949e;
+            border-bottom: 1px solid #30363d;
+            font-weight: normal;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.68rem;
+            white-space: nowrap;
+        }
+        .lp-table td {
+            padding: 9px 12px;
+            border-bottom: 1px solid #161b22;
+            vertical-align: top;
+            color: #c9d1d9;
+        }
+        .lp-table tr:hover td { background: rgba(255,255,255,0.03); }
+        .lp-table tr:last-child td { border-bottom: none; }
+
+        .lp-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 0.68rem;
+            white-space: nowrap;
+        }
+        .lp-badge-safe   { background: rgba(63,185,80,0.15);  color: #3fb950; border: 1px solid #3fb950; }
+        .lp-badge-threat { background: rgba(248,81,73,0.15);  color: #f85149; border: 1px solid #f85149; }
+        .lp-badge-info   { background: rgba(88,166,255,0.12); color: #58a6ff; border: 1px solid #58a6ff; }
+
+        .lp-source {
+            font-size: 0.65rem;
+            color: #8b949e;
+            background: #21262d;
+            padding: 2px 6px;
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+        .lp-analysis {
+            color: #8b949e;
+            max-width: 420px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            cursor: pointer;
+            line-height: 1.4;
+        }
+        .lp-analysis.expanded {
+            display: block;
+            -webkit-line-clamp: unset;
+            color: #c9d1d9;
+        }
+        .lp-empty {
+            padding: 36px;
+            text-align: center;
+            color: #484f58;
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+        }
+        .lp-footer {
+            padding: 9px 20px;
+            border-top: 1px solid #21262d;
+            font-size: 0.68rem;
+            color: #484f58;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .footer-links {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .back-link { 
+            display: inline-block; 
+            color: #0070f3; 
+            text-decoration: none; 
+            font-weight: 500; 
+        }
+        .back-link:hover { text-decoration: underline; }
+        .edu-link { color: #27ae60; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>ShieldMatrix Threat Intelligence Dashboard</h1>
+        <p class="subtitle">Real-time threat recognition, deep static file inspection, and activity monitoring powered by ShieldMatrix AI.</p>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- DEEP FILE UPLOAD & SAFETY SCANNER                               -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <div class="scanner-card">
+            <h2 style="margin-top:0; color:#0070f3; font-size:1.25rem;">&#128269; Deep File &amp; URL Safety Scanner</h2>
+            <p style="font-size:0.9rem; color:#555; margin-bottom:14px;">
+                Upload any downloaded file (supports <strong>any format</strong>: <code>.exe</code>, <code>.vbs</code>, <code>.pdf</code>, <code>.docx</code>, <code>.zip</code>, <code>.bat</code>, <code>.ps1</code>, etc.) or inspect a suspicious URL. ShieldMatrix AI extracts static signatures, magic headers, macros, and entropy to advise you if it is safe to open.
+            </p>
+
+            <!-- Mode Selector Tabs -->
+            <div class="scanner-tabs">
+                <button class="scanner-tab-btn active" id="tabUploadBtn" type="button">&#128193; Upload &amp; Inspect File (Any Format)</button>
+                <button class="scanner-tab-btn" id="tabUrlBtn" type="button">&#127760; Quick URL / Filename Lookup</button>
+            </div>
+
+            <!-- View 1: File Upload Mode -->
+            <div id="uploadModeView">
+                <div class="dropzone" id="fileDropzone">
+                    <span class="dropzone-icon">&#128229;</span>
+                    <strong style="font-size:1.05rem; color:#0070f3;">Drag &amp; drop your downloaded file here</strong>
+                    <p style="font-size:0.85rem; color:#6c757d; margin-top:4px; margin-bottom:12px;">or click to browse from your device (any file format supported)</p>
+                    <input type="file" id="filePicker" style="display:none;">
+                    <button type="button" class="btn" id="browseBtn" style="padding:8px 20px; font-size:0.88rem;">Select File</button>
+                </div>
+
+                <div class="file-selected-box" id="fileSelectedBox">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.8rem;">&#128196;</span>
+                        <div>
+                            <strong id="selectedFileName" style="color:#212529; font-size:0.95rem;">sample.exe</strong>
+                            <div id="selectedFileSize" style="font-size:0.8rem; color:#6c757d;">0 KB</div>
+                        </div>
+                    </div>
+                    <button id="runFileScanBtn" class="btn" style="background:#27ae60; padding:10px 22px; font-size:0.95rem;">
+                        &#128737;&#65039; Inspect &amp; Check If Safe To Open
+                    </button>
+                </div>
+            </div>
+
+            <!-- View 2: Text / URL Lookup Mode -->
+            <div id="urlModeView" style="display:none;">
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+                    <input id="scanInput" type="text"
+                        placeholder="e.g.  http://free-giftcards-secure-login.ru/claim  or  invoice_update.vbs"
+                        style="flex:1; min-width:240px; padding:11px 14px; border:1px solid #ccc;
+                               border-radius:6px; font-size:0.95rem; font-family:inherit;">
+                    <select id="scanType" style="padding:10px; border:1px solid #ccc; border-radius:6px;
+                                                 font-family:inherit; font-size:0.95rem; background:#fff;">
+                        <option value="url">&#127760; URL</option>
+                        <option value="file">&#128196; Filename</option>
+                    </select>
+                    <button id="scanBtn" class="btn" style="white-space:nowrap;">
+                        Scan &#9658;
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="scannerLoading" style="display:none; text-align:center; padding:26px; color:#0070f3; font-weight:bold; font-size:1rem;">
+                &#9889; ShieldMatrix AI is extracting static headers, entropy, script indicators &amp; evaluating safety...
+            </div>
+
+            <!-- Result Box -->
+            <div id="scanResultContainer" style="display:none; margin-top:16px;">
+                <!-- Dynamic Verdict Banner -->
+                <div id="verdictBanner" class="verdict-banner"></div>
+
+                <!-- Static Telemetry Grid (populated on file uploads) -->
+                <div id="telemetryGrid" class="telemetry-grid" style="display:none;"></div>
+
+                <!-- Detailed AI Guidance Markdown -->
+                <div id="analysisContent" class="analysis-markdown"></div>
+            </div>
+        </div>
+        <!-- ═══════════════ END SCANNER ══════════════════════════════════ -->
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- REAL-TIME PERSISTENT ACTIVITY LOG PANEL                         -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <div class="log-panel">
+
+            <!-- Header row -->
+            <div class="log-panel-header">
+                <h2>
+                    <span class="lp-dot" id="lpDot"></span>
+                    &#9889; Real-Time Activity &amp; Threat Log
+                </h2>
+                <div class="lp-controls">
+                    <button class="lp-btn" id="lpPauseBtn">&#9208; Pause</button>
+                    <button class="lp-btn" id="lpRefreshBtn">&#8635; Refresh Now</button>
+                    <button class="lp-btn" id="lpClearBtn" style="color:#f85149; border-color:#da3633;">&#128465; Clear Logs</button>
+                </div>
+            </div>
+
+            <!-- Summary pills -->
+            <div class="lp-stats">
+                <span class="lp-pill lp-pill-total">Total: <span id="lpTotal">0</span></span>
+                <span class="lp-pill lp-pill-safe">&#10003; Safe: <span id="lpSafe">0</span></span>
+                <span class="lp-pill lp-pill-threat">&#9888; Threats: <span id="lpThreat">0</span></span>
+                <span class="lp-pill lp-pill-uploads">Uploads: <span id="lpUploads">0</span></span>
+                <span class="lp-pill lp-pill-ext">Extension: <span id="lpExt">0</span></span>
+            </div>
+
+            <!-- Filter tabs -->
+            <div class="lp-filters">
+                <button class="lp-tab active" data-lp-filter="all">All</button>
+                <button class="lp-tab" data-lp-filter="SAFE">Safe only</button>
+                <button class="lp-tab" data-lp-filter="THREAT">Threats only</button>
+                <button class="lp-tab" data-lp-filter="browser_extension">Extension Only</button>
+                <button class="lp-tab" data-lp-filter="file_upload_scanner">Uploaded Files</button>
+                <button class="lp-tab" data-lp-filter="manual_scanner">Manual Scan</button>
+                <button class="lp-tab" data-lp-filter="server_auto_scan">Auto-scan</button>
+            </div>
+
+            <!-- Log table -->
+            <div class="lp-table-wrap">
+                <table class="lp-table">
+                    <thead>
+                        <tr>
+                            <th style="width:130px">Timestamp (UTC)</th>
+                            <th style="width:70px">Verdict</th>
+                            <th style="width:110px">Source</th>
+                            <th style="width:80px">Type</th>
+                            <th>Analysis (click to expand)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lpTableBody">
+                        <tr>
+                            <td colspan="5">
+                                <div class="lp-empty">&#128225; Waiting for first log pull&hellip;</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer -->
+            <div class="lp-footer">
+                <span id="lpLastRefresh">Last refresh: &mdash;</span>
+                <span id="lpEntryCount">0 entries</span>
+            </div>
+        </div>
+        <!-- ═══════════════════════════ END LOG PANEL ════════════════════ -->
+
+        <div class="footer-links">
+            <a href="/" class="back-link">&larr; Landing Page</a>
+            <a href="/education" class="back-link edu-link">Threat Prevention Hub &rarr;</a>
+            <a href="/quiz" class="back-link" style="color: #8e44ad;">Take a Quiz &rarr;</a>
+        </div>
+    </div>
+
+    <script>
+        // ================================================================
+        // DEEP FILE UPLOAD & SAFETY SCANNER CONTROLLER
+        // ================================================================
+        const tabUploadBtn        = document.getElementById('tabUploadBtn');
+        const tabUrlBtn           = document.getElementById('tabUrlBtn');
+        const uploadModeView      = document.getElementById('uploadModeView');
+        const urlModeView         = document.getElementById('urlModeView');
+        const fileDropzone        = document.getElementById('fileDropzone');
+        const filePicker          = document.getElementById('filePicker');
+        const browseBtn           = document.getElementById('browseBtn');
+        const fileSelectedBox     = document.getElementById('fileSelectedBox');
+        const selectedFileName    = document.getElementById('selectedFileName');
+        const selectedFileSize    = document.getElementById('selectedFileSize');
+        const runFileScanBtn      = document.getElementById('runFileScanBtn');
+        
+        const scanInput           = document.getElementById('scanInput');
+        const scanType            = document.getElementById('scanType');
+        const scanBtn             = document.getElementById('scanBtn');
+        
+        const scannerLoading      = document.getElementById('scannerLoading');
+        const scanResultContainer = document.getElementById('scanResultContainer');
+        const verdictBanner       = document.getElementById('verdictBanner');
+        const telemetryGrid       = document.getElementById('telemetryGrid');
+        const analysisContent     = document.getElementById('analysisContent');
+
+        let currentSelectedFile   = null;
+
+        // Tab Switching
+        tabUploadBtn.addEventListener('click', () => {
+            tabUploadBtn.classList.add('active');
+            tabUrlBtn.classList.remove('active');
+            uploadModeView.style.display = 'block';
+            urlModeView.style.display = 'none';
+        });
+
+        tabUrlBtn.addEventListener('click', () => {
+            tabUrlBtn.classList.add('active');
+            tabUploadBtn.classList.remove('active');
+            urlModeView.style.display = 'block';
+            uploadModeView.style.display = 'none';
+        });
+
+        // File Selection (Picker & Drag/Drop)
+        browseBtn.addEventListener('click', () => filePicker.click());
+        fileDropzone.addEventListener('click', (e) => {
+            if (e.target !== browseBtn) filePicker.click();
+        });
+
+        filePicker.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelection(e.target.files[0]);
+            }
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileDropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                fileDropzone.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileDropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                fileDropzone.classList.remove('dragover');
+            });
+        });
+
+        fileDropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            if (dt && dt.files.length > 0) {
+                handleFileSelection(dt.files[0]);
+            }
+        });
+
+        function handleFileSelection(file) {
+            currentSelectedFile = file;
+            selectedFileName.textContent = file.name;
+            const kb = (file.size / 1024).toFixed(1);
+            selectedFileSize.textContent = `${kb} KB (${file.type || 'Binary / Raw Data'})`;
+            fileSelectedBox.style.display = 'flex';
+        }
+
+        function displayScanResults(verdict, analysisMarkdown, telemetry = null) {
+            scanResultContainer.style.display = 'block';
+            
+            // Verdict Banner
+            verdictBanner.className = 'verdict-banner';
+            if (verdict === 'SAFE') {
+                verdictBanner.classList.add('verdict-safe');
+                verdictBanner.innerHTML = '&#9989; <span>VERDICT: SAFE TO OPEN &mdash; No malicious payloads or high-risk signatures detected.</span>';
+            } else if (verdict === 'THREAT') {
+                verdictBanner.classList.add('verdict-threat');
+                verdictBanner.innerHTML = '&#9888;&#65039; <span>VERDICT: DANGEROUS / MALICIOUS &mdash; DO NOT OPEN! High risk of system compromise.</span>';
+            } else {
+                verdictBanner.classList.add('verdict-suspicious');
+                verdictBanner.innerHTML = '&#9888;&#65039; <span>VERDICT: SUSPICIOUS &mdash; Potential risk or obfuscated script components detected. Exercise caution.</span>';
+            }
+
+            // Telemetry Grid
+            if (telemetry) {
+                telemetryGrid.style.display = 'grid';
+                let macroAlert = telemetry.has_macros ? '<span style="color:#d32f2f; font-weight:bold;">YES (VBA Macros Detected!)</span>' : 'None Detected';
+                let mismatchAlert = telemetry.mismatch_warning ? '<span style="color:#d32f2f; font-weight:bold;">MISMATCH! (Masquerading Trojan Risk)</span>' : 'Matches Extension';
+                let doubleExtAlert = telemetry.double_ext_warning ? '<span style="color:#d32f2f; font-weight:bold;">DOUBLE EXTENSION DETECTED!</span>' : 'Normal';
+                let keywordsStr = telemetry.suspicious_keywords && telemetry.suspicious_keywords.length > 0 ? telemetry.suspicious_keywords.join(', ') : 'None Detected';
+
+                telemetryGrid.innerHTML = `
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">True File Format</span>
+                        <span class="telemetry-val">${lpEscHtml(telemetry.detected_type)}</span>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">File Size & SHA-256</span>
+                        <span class="telemetry-val">${telemetry.size_kb} KB (${telemetry.sha256.slice(0, 10)}...)</span>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Extension Check</span>
+                        <span class="telemetry-val">${mismatchAlert}</span>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Double Extension</span>
+                        <span class="telemetry-val">${doubleExtAlert}</span>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">VBA Macros</span>
+                        <span class="telemetry-val">${macroAlert}</span>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Binary Entropy</span>
+                        <span class="telemetry-val">${telemetry.entropy} / 8.0 ${telemetry.entropy > 7.2 ? '<span style="color:#d32f2f;">(High/Packed)</span>' : '(Normal)'}</span>
+                    </div>
+                    <div class="telemetry-item" style="grid-column: 1 / -1;">
+                        <span class="telemetry-label">Script & Execution Indicators</span>
+                        <span class="telemetry-val" style="color:#495057;">${lpEscHtml(keywordsStr)}</span>
+                    </div>
+                `;
+            } else {
+                telemetryGrid.style.display = 'none';
+            }
+
+            // Markdown Analysis
+            if (typeof marked !== 'undefined') {
+                analysisContent.innerHTML = marked.parse(analysisMarkdown);
+            } else {
+                analysisContent.textContent = analysisMarkdown;
+            }
+        }
+
+        // Run File Deep Inspection
+        runFileScanBtn.addEventListener('click', async () => {
+            if (!currentSelectedFile) return;
+
+            scanResultContainer.style.display = 'none';
+            scannerLoading.style.display = 'block';
+            runFileScanBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', currentSelectedFile);
+
+            try {
+                const res = await fetch('/api/scan-file', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    displayScanResults(data.verdict, data.analysis, data.telemetry);
+                    if (typeof lpFetch === 'function') lpFetch(); // Update log panel immediately
+                } else {
+                    alert('Scan Error: ' + (data.message || 'Inspection failed'));
+                }
+            } catch (err) {
+                alert('Connection error communicating with ShieldMatrix AI: ' + err.message);
+            } finally {
+                scannerLoading.style.display = 'none';
+                runFileScanBtn.disabled = false;
+            }
+        });
+
+        // Run Quick URL / Filename Lookup
+        scanBtn.addEventListener('click', async () => {
+            const val = scanInput.value.trim();
+            const type = scanType.value;
+            if (!val) {
+                alert('Please enter a filename or URL to inspect.');
+                return;
+            }
+
+            scanResultContainer.style.display = 'none';
+            scannerLoading.style.display = 'block';
+            scanBtn.disabled = true;
+
+            try {
+                const res = await fetch('/api/activity-check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: type, value: val, source: 'manual_scanner' })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    displayScanResults(data.verdict, data.analysis, null);
+                    if (typeof lpFetch === 'function') lpFetch(); // Update log panel immediately
+                } else {
+                    alert('Scan Error: ' + (data.message || 'Lookup failed'));
+                }
+            } catch (err) {
+                alert('Connection error communicating with ShieldMatrix AI: ' + err.message);
+            } finally {
+                scannerLoading.style.display = 'none';
+                scanBtn.disabled = false;
+            }
+        });
+
+        // ================================================================
+        // EMBEDDED LOG PANEL — Polls /api/logs every 5 seconds.
+        // All variables are prefixed lp_ to avoid conflicts.
+        // ================================================================
+
+        let lpAllLogs     = [];
+        let lpPaused      = false;
+        let lpFilter      = 'all';
+        let lpPollTimer   = null;
+
+        const lpTableBody   = document.getElementById('lpTableBody');
+        const lpDot         = document.getElementById('lpDot');
+        const lpPauseBtn    = document.getElementById('lpPauseBtn');
+        const lpRefreshBtn  = document.getElementById('lpRefreshBtn');
+        const lpTotalEl     = document.getElementById('lpTotal');
+        const lpSafeEl      = document.getElementById('lpSafe');
+        const lpThreatEl    = document.getElementById('lpThreat');
+        const lpUploadsEl   = document.getElementById('lpUploads');
+        const lpExtEl       = document.getElementById('lpExt');
+        const lpLastRefEl   = document.getElementById('lpLastRefresh');
+        const lpCountEl     = document.getElementById('lpEntryCount');
+
+        function lpEscHtml(str) {
+            return String(str)
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function lpFmtTs(iso) {
+            try { return new Date(iso).toISOString().replace('T',' ').slice(0,19); }
+            catch { return iso || '—'; }
+        }
+
+        function lpUpdateStats() {
+            lpTotalEl.textContent  = lpAllLogs.length;
+            lpSafeEl.textContent   = lpAllLogs.filter(e => e.verdict === 'SAFE').length;
+            lpThreatEl.textContent = lpAllLogs.filter(e => e.verdict === 'THREAT').length;
+            if (lpUploadsEl) lpUploadsEl.textContent = lpAllLogs.filter(e => e.source === 'file_upload_scanner').length;
+            lpExtEl.textContent    = lpAllLogs.filter(e => e.source  === 'browser_extension').length;
+        }
+
+        function lpRender() {
+            const filtered = lpAllLogs.filter(e => {
+                if (lpFilter === 'all')    return true;
+                if (lpFilter === 'SAFE')   return e.verdict === 'SAFE';
+                if (lpFilter === 'THREAT') return e.verdict === 'THREAT';
+                return e.source === lpFilter;
+            });
+
+            if (filtered.length === 0) {
+                lpTableBody.innerHTML = '<tr><td colspan="5"><div class="lp-empty">&#128269; No entries match this filter.</div></td></tr>';
+                return;
+            }
+
+            lpTableBody.innerHTML = [...filtered].reverse().map(e => {
+                const verdict = e.verdict || 'INFO';
+                const bc = verdict === 'SAFE'   ? 'lp-badge-safe'
+                         : verdict === 'THREAT' ? 'lp-badge-threat'
+                         :                       'lp-badge-info';
+                const analysis = lpEscHtml(e.analysis || e.input || '—');
+                return `<tr>
+                    <td style="color:#8b949e;white-space:nowrap;font-size:0.7rem">${lpFmtTs(e.timestamp)}</td>
+                    <td><span class="lp-badge ${bc}">${verdict}</span></td>
+                    <td><span class="lp-source">${lpEscHtml(e.source||'unknown')}</span></td>
+                    <td style="color:#8b949e">${lpEscHtml(e.type||'—')}</td>
+                    <td><div class="lp-analysis" onclick="this.classList.toggle('expanded')" title="Click to expand">${analysis}</div></td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function lpFetch() {
+            try {
+                const res  = await fetch('/api/logs?limit=100');
+                const data = await res.json();
+                if (data.status === 'success') {
+                    lpAllLogs = data.logs;
+                    lpRender();
+                    lpUpdateStats();
+                    lpLastRefEl.textContent = 'Last refresh: ' + new Date().toLocaleTimeString();
+                    lpCountEl.textContent   = lpAllLogs.length + ' entries';
+                }
+            } catch (_) { /* silently ignore — backend may be starting */ }
+        }
+
+        function lpStartPoll() {
+            if (lpPollTimer) clearInterval(lpPollTimer);
+            lpPollTimer = setInterval(lpFetch, 5000);
+        }
+
+        lpPauseBtn.addEventListener('click', () => {
+            lpPaused = !lpPaused;
+            if (lpPaused) {
+                clearInterval(lpPollTimer); lpPollTimer = null;
+                lpPauseBtn.textContent = '&#9654; Resume';
+                lpPauseBtn.classList.add('active');
+                lpDot.classList.add('paused');
+            } else {
+                lpStartPoll();
+                lpPauseBtn.textContent = '&#9208; Pause';
+                lpPauseBtn.classList.remove('active');
+                lpDot.classList.remove('paused');
+            }
+        });
+
+        lpRefreshBtn.addEventListener('click', lpFetch);
+
+        const lpClearBtn = document.getElementById('lpClearBtn');
+        if (lpClearBtn) {
+            lpClearBtn.addEventListener('click', async () => {
+                if (!confirm('Are you sure you want to clear all previous activity logs? This will wipe the server-side log history.')) {
+                    return;
+                }
+                try {
+                    const res = await fetch('/api/logs/clear', { method: 'POST' });
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                        lpAllLogs = [];
+                        lpRender();
+                        lpUpdateStats();
+                        lpLastRefEl.textContent = 'Cleared: ' + new Date().toLocaleTimeString();
+                        lpCountEl.textContent   = '0 entries';
+                    } else {
+                        alert('Error clearing logs: ' + (data.message || 'Server error'));
+                    }
+                } catch (err) {
+                    alert('Failed to clear logs: ' + err.message);
+                }
+            });
+        }
+
+        document.querySelectorAll('.lp-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.lp-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                lpFilter = tab.dataset.lpFilter;
+                lpRender();
+            });
+        });
+
+        // Boot the log panel
+        lpFetch();
+        lpStartPoll();
+    </script>
+</body>
+</html>
